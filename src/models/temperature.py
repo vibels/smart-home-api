@@ -53,6 +53,11 @@ class TemperatureModel:
                 return pd.DataFrame(columns=['_time', 'temperature', 'device_id', 'location'])
             
             result['_time'] = pd.to_datetime(result['_time'])
+            
+            # Handle missing location column
+            if 'location' not in result.columns:
+                result['location'] = None
+            
             return result[['_time', 'temperature', 'device_id', 'location']]
         except Exception as e:
             logger.error(f"Error querying temperature data: {e}")
