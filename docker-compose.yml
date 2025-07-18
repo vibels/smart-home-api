@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: smart-home-influxdb
+    ports:
+      - "8086:8086"
+    networks:
+      - smart-home-network
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - ./src/init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=smart-home
+      - DOCKER_INFLUXDB_INIT_BUCKET=temperature-events
+      - DOCKER_INFLUXDB_INIT_RETENTION=1w
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=smart-home-token
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dashboard:
+    image: ${DOCKERHUB_USERNAME:-vibels}/smart-home-dashboard:${IMAGE_TAG:-latest}
+    container_name: smart-home-dashboard
+    ports:
+      - "8050:8050"
+    networks:
+      - smart-home-network
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=smart-home-token
+      - INFLUXDB_ORG=smart-home
+      - INFLUXDB_BUCKET=temperature-events
+    restart: unless-stopped
+
+volumes:
+  influxdb_data:
+
+networks:
+  smart-home-network:
+    driver: bridge
