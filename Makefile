@@ -1,4 +1,4 @@
-.PHONY: help install run build-linux build-windows setup-buildx test-setup test-run test-teardown test docker-test stop-all stop-influxdb stop-dashboard push-dockerhub
+.PHONY: help install run build-linux build-windows setup-buildx test-setup test-run test-teardown test docker-test stop-all stop-influxdb stop-dashboard push-dockerhub tunnel
 
 PYTHON := python
 PIP := pip
@@ -6,6 +6,7 @@ DOCKER := docker
 IMAGE_NAME := smart-home-dashboard
 BUILDER_NAME := multiplatform-builder
 IMAGE_TAG ?= latest
+DASHBOARD_PORT ?= 8050
 
 help:
 	@echo "Available targets:"
@@ -19,6 +20,7 @@ help:
 	@echo "  stop-influxdb      - Stop InfluxDB container"
 	@echo "  stop-dashboard     - Stop dashboard container"
 	@echo "  push-dockerhub     - Push image to Docker Hub (interactive)"
+	@echo "  tunnel             - Start Cloudflare tunnel for dashboard"
 
 install:
 	$(PIP) install -r requirements.txt
@@ -87,3 +89,7 @@ push-dockerhub:
 	imagename=$$(echo $$localimage | cut -d':' -f1); \
 	$(DOCKER) tag $$localimage $$username/$$imagename:$$tag; \
 	$(DOCKER) push $$username/$$imagename:$$tag
+
+tunnel:
+	@echo "Starting Cloudflare tunnel for dashboard on port $(DASHBOARD_PORT)..."
+	cloudflared tunnel --url http://localhost:$(DASHBOARD_PORT)
