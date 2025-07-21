@@ -17,7 +17,7 @@ class ConfigManager:
                 "url": os.getenv("INFLUXDB_URL", "http://localhost:8086"),
                 "token": os.getenv("INFLUXDB_TOKEN", "smart-home-token"),
                 "org": os.getenv("INFLUXDB_ORG", "smart-home"),
-                "bucket": os.getenv("INFLUXDB_BUCKET", "temperature-events")
+                "bucket": os.getenv("INFLUXDB_BUCKET", "sensor-events")
             },
             "logging": {
                 "level": os.getenv("LOG_LEVEL", "INFO")

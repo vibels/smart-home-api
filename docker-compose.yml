@@ -16,7 +16,7 @@ services:
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
       - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
       - DOCKER_INFLUXDB_INIT_ORG=smart-home
-      - DOCKER_INFLUXDB_INIT_BUCKET=temperature-events
+      - DOCKER_INFLUXDB_INIT_BUCKET=sensor-events
       - DOCKER_INFLUXDB_INIT_RETENTION=1w
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=smart-home-token
     restart: unless-stopped
@@ -28,6 +28,7 @@ services:
 
   dashboard:
     image: ${DOCKERHUB_USERNAME:-vibels}/smart-home-dashboard:${IMAGE_TAG:-latest}
+#    image: smart-home-dashboard:linux
     container_name: smart-home-dashboard
     ports:
       - "8050:8050"
@@ -40,7 +41,7 @@ services:
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=smart-home-token
       - INFLUXDB_ORG=smart-home
-      - INFLUXDB_BUCKET=temperature-events
+      - INFLUXDB_BUCKET=sensor-events
     restart: unless-stopped
 
 volumes:

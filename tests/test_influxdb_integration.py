@@ -10,19 +10,20 @@ class TestInfluxDBIntegration:
     def test_write_temperature_event(self, influxdb_client):
         write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
         
-        point = Point("temperature_events") \
+        point = Point("sensor_events") \
             .tag("device_id", "test_device_001") \
             .tag("location", "living_room") \
-            .field("temperature", 23.5) \
+            .tag("type", "temperature") \
+            .field("value", 23.5) \
             .time(datetime.now(timezone.utc))
         
-        write_api.write(bucket="temperature-events", record=point)
+        write_api.write(bucket="sensor-events", record=point)
         
         query_api = influxdb_client.query_api()
         query = '''
-            from(bucket: "temperature-events")
+            from(bucket: "sensor-events")
             |> range(start: -1h)
-            |> filter(fn: (r) => r._measurement == "temperature_events")
+            |> filter(fn: (r) => r._measurement == "sensor_events")
             |> filter(fn: (r) => r.device_id == "test_device_001")
         '''
         
@@ -37,29 +38,31 @@ class TestInfluxDBIntegration:
         
         now = datetime.now(timezone.utc)
         points = [
-            Point("temperature_events")
+            Point("sensor_events")
             .tag("device_id", "test_device_002")
             .tag("location", "kitchen")
-            .field("temperature", 21.0)
+            .tag("type", "temperature")
+            .field("value", 21.0)
             .time(now),
             
-            Point("temperature_events")
+            Point("sensor_events")
             .tag("device_id", "test_device_003")
             .tag("location", "bedroom")
-            .field("temperature", 19.5)
+            .tag("type", "temperature")
+            .field("value", 19.5)
             .time(now + timedelta(seconds=1))
         ]
         
-        write_api.write(bucket="temperature-events", record=points)
+        write_api.write(bucket="sensor-events", record=points)
         
         # Wait a moment for write to complete
         time.sleep(1)
         
         query_api = influxdb_client.query_api()
         query = '''
-            from(bucket: "temperature-events")
+            from(bucket: "sensor-events")
             |> range(start: -1h)
-            |> filter(fn: (r) => r._measurement == "temperature_events")
+            |> filter(fn: (r) => r._measurement == "sensor_events")
             |> filter(fn: (r) => r.device_id == "test_device_002" or r.device_id == "test_device_003")
             |> group()
         '''
@@ -77,7 +80,7 @@ class TestInfluxDBIntegration:
         
         bucket_query = '''
             buckets()
-            |> filter(fn: (r) => r.name == "temperature-events")
+            |> filter(fn: (r) => r.name == "sensor-events")
         '''
         
         result = query_api.query(bucket_query)

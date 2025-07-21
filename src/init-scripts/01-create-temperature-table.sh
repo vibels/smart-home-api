@@ -5,7 +5,7 @@ until curl -s http://localhost:8086/ping > /dev/null; do
 done
 
 INFLUXDB_ORG=${INFLUXDB_ORG:-smart-home}
-INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-temperature-events}
+INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-sensor-events}
 INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-smart-home-token}
 
 influx write \
@@ -13,7 +13,7 @@ influx write \
   --org "$INFLUXDB_ORG" \
   --token "$INFLUXDB_TOKEN" \
   --precision s \
-  'temperature_events,device_id=schema_init,location=test temperature=0.0'
+  'sensor_events,device_id=schema_init,location=test,type=temperature value=0.0'
 
 influx delete \
   --bucket "$INFLUXDB_BUCKET" \
