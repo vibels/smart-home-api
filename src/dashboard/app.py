@@ -13,7 +13,7 @@ from influxdb_client.client.warnings import MissingPivotFunction
 warnings.simplefilter("ignore", MissingPivotFunction)
 logger = get_logger(__name__)
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 temp_model = TemperatureModel()
 humidity_model = HumidityModel()
