@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libc6-dev \
+    make \
+    build-essential
+
+COPY rule-engine/requirements.txt ./requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY rule-engine/ ./rule-engine/
+
+EXPOSE 5001
+
+CMD ["sh", "-c", "python rule-engine/scripts/setup_actionable_devices.py && python rule-engine/service.py"]

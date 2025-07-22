@@ -1,0 +1,3 @@
+flask==2.3.3
+durable-rules==2.0.28
+psycopg2-binary==2.9.7

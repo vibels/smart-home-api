@@ -1,6 +1,27 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15
+    container_name: smart-home-postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - smart-home-network
+    environment:
+      - POSTGRES_DB=smart_home
+      - POSTGRES_USER=smart_home_user
+      - POSTGRES_PASSWORD=smart_home_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./rule-engine/scripts/init-postgres.sql:/docker-entrypoint-initdb.d/01-init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smart_home_user -d smart_home"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   influxdb:
     image: influxdb:2.7
     container_name: smart-home-influxdb
@@ -26,6 +47,28 @@ services:
       timeout: 5s
       retries: 5
 
+  rule-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile.rule-engine
+    image: ${DOCKERHUB_USERNAME:-vibels}/smart-home-rule-engine:${IMAGE_TAG:-latest}
+    container_name: smart-home-rule-engine
+    ports:
+      - "5001:5001"
+    networks:
+      - smart-home-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=smart_home
+      - POSTGRES_USER=smart_home_user
+      - POSTGRES_PASSWORD=smart_home_pass
+      - POSTGRES_PORT=5432
+      - RULE_ENGINE_PORT=5001
+    restart: unless-stopped
+
   dashboard:
     image: ${DOCKERHUB_USERNAME:-vibels}/smart-home-dashboard:${IMAGE_TAG:-latest}
 #    image: smart-home-dashboard:linux
@@ -37,15 +80,19 @@ services:
     depends_on:
       influxdb:
         condition: service_healthy
+      rule-engine:
+        condition: service_started
     environment:
       - INFLUXDB_URL=http://influxdb:8086
       - INFLUXDB_TOKEN=smart-home-token
       - INFLUXDB_ORG=smart-home
       - INFLUXDB_BUCKET=sensor-events
+      - RULE_ENGINE_URL=http://rule-engine:5001
     restart: unless-stopped
 
 volumes:
   influxdb_data:
+  postgres_data:
 
 networks:
   smart-home-network:
