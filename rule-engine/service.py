@@ -85,6 +85,16 @@ def delete_rule(rule_id):
         logger.error(f"Error deleting rule {rule_id}: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/rules/<rule_id>/toggle', methods=['POST'])
+def toggle_rule_enabled(rule_id):
+    try:
+        result = rule_api.toggle_rule_enabled(rule_id)
+        status_code = 200 if result['success'] else 404
+        return jsonify(result), status_code
+    except Exception as e:
+        logger.error(f"Error toggling rule {rule_id}: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 @app.route('/devices', methods=['GET'])
 def get_all_devices():
     try:

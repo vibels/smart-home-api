@@ -56,6 +56,17 @@ class RuleEngineAPI:
             logger.error(f"Error deleting rule {rule_id}: {e}")
             return {'success': False, 'message': f'Error: {str(e)}'}
     
+    def toggle_rule_enabled(self, rule_id: str) -> Dict[str, Any]:
+        try:
+            success = self.actionable_model.toggle_rule_enabled(rule_id)
+            if success:
+                return {'success': True, 'message': 'Rule status toggled successfully'}
+            else:
+                return {'success': False, 'message': 'Rule not found or failed to toggle'}
+        except Exception as e:
+            logger.error(f"Error toggling rule {rule_id}: {e}")
+            return {'success': False, 'message': f'Error: {str(e)}'}
+    
     def get_all_devices(self) -> Dict[str, Any]:
         try:
             devices = self.actionable_model.get_all_devices()

@@ -34,6 +34,82 @@ class DeviceCapability:
 
 
 @dataclass
+class Action:
+    capability_name: str
+    action_type: CapabilityType
+    value: Any
+
+@dataclass
+class ToggleAction(Action):
+    action_type: CapabilityType = CapabilityType.TOGGLE
+    value: str = "on"  # "on", "off", or "toggle"
+
+@dataclass 
+class AbsoluteValueAction(Action):
+    action_type: CapabilityType = CapabilityType.ABSOLUTE_VALUE
+    value: float = 0.0
+
+@dataclass
+class DiscreteValueAction(Action):
+    action_type: CapabilityType = CapabilityType.DISCRETE_VALUES
+    value: str = ""  # Should match one of the values from capability config
+
+@dataclass
+class TriggerAction(Action):
+    action_type: CapabilityType = CapabilityType.TRIGGER
+    value: int = 30  # Duration in seconds, default 30
+
+@dataclass
+class Rule:
+    device_id: str
+    rule_name: str
+    condition_tree: Dict[str, Any]
+    actions: List[Action]
+    rule_id: Optional[int] = None
+    enabled: bool = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+def create_action_from_dict(capability_name: str, action_data: Dict[str, Any]) -> Action:
+    if 'toggle' in action_data:
+        return ToggleAction(
+            capability_name=capability_name,
+            value=action_data['toggle']
+        )
+    elif 'absolute_value' in action_data:
+        return AbsoluteValueAction(
+            capability_name=capability_name,
+            value=action_data['absolute_value']
+        )
+    elif 'discrete_value' in action_data:
+        discrete_config = action_data['discrete_value']
+        value = next(iter(discrete_config.values())) if discrete_config else ""
+        return DiscreteValueAction(
+            capability_name=capability_name,
+            value=value
+        )
+    elif 'trigger' in action_data:
+        duration = action_data.get('duration', 30)
+        return TriggerAction(
+            capability_name=capability_name,
+            value=duration
+        )
+    else:
+        raise ValueError(f"Unknown action type in data: {action_data}")
+
+def action_to_dict(action: Action) -> Dict[str, Any]:
+    if isinstance(action, ToggleAction):
+        return {'toggle': action.value}
+    elif isinstance(action, AbsoluteValueAction):
+        return {'absolute_value': action.value}
+    elif isinstance(action, DiscreteValueAction):
+        return {'discrete_value': {'key': action.value}}
+    elif isinstance(action, TriggerAction):
+        return {'trigger': True, 'duration': action.value}
+    else:
+        raise ValueError(f"Unknown action type: {type(action)}")
+
+@dataclass
 class ActionableDevice:
     device_id: str
     device_type: str
@@ -226,7 +302,7 @@ class ActionableDeviceModel:
         try:
             with self._get_connection() as conn:
                 with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-                    cursor.execute('SELECT * FROM device_rules WHERE device_id = %s AND enabled = TRUE', (device_id,))
+                    cursor.execute('SELECT * FROM device_rules WHERE device_id = %s ORDER BY created_at DESC', (device_id,))
                     rows = cursor.fetchall()
                     
                     rules = []
@@ -244,6 +320,27 @@ class ActionableDeviceModel:
         except Exception as e:
             logger.error(f"Error getting rules for device {device_id}: {e}")
             return []
+
+    def toggle_rule_enabled(self, rule_id: str) -> bool:
+        try:
+            with self._get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute('SELECT enabled FROM device_rules WHERE rule_id = %s', (rule_id,))
+                    result = cursor.fetchone()
+                    if not result:
+                        return False
+                    
+                    new_enabled = not result[0]
+                    cursor.execute('''
+                        UPDATE device_rules 
+                        SET enabled = %s, updated_at = CURRENT_TIMESTAMP
+                        WHERE rule_id = %s
+                    ''', (new_enabled, rule_id))
+                    conn.commit()
+                    return cursor.rowcount > 0
+        except Exception as e:
+            logger.error(f"Error toggling rule {rule_id}: {e}")
+            return False
 
     def update_rule(self, rule_id: str, rule_name: str, conditions: Dict[str, Any], actions: Dict[str, Any]) -> bool:
         try:

@@ -158,8 +158,8 @@ class SmartHomeRuleEngine:
                     
                     elif 'trigger' in action_config:
                         trigger_time = datetime.now().isoformat()
-                        if 'duration' in action_config:
-                            trigger_time = f"{trigger_time}:duration:{action_config['duration']}"
+                        duration = action_config.get('duration', 30)
+                        trigger_time = f"{trigger_time}:duration:{duration}"
                         self.actionable_model.update_device_capability(device_id, capability, trigger_time)
                     
                     elif 'absolute_value' in action_config:

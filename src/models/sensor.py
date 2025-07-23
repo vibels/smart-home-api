@@ -124,7 +124,7 @@ class SensorModel:
     def get_latest_device_data(self, **extras) -> pd.DataFrame:
         query = f'''
         from(bucket: "{self.bucket}")
-        |> range(start: -24h)
+        |> range(start: -7d)
         |> filter(fn: (r) => r["_measurement"] == "sensor_events")
         |> filter(fn: (r) => r["_field"] == "value")
         |> filter(fn: (r) => r["type"] == "{self.sensor_type}")
