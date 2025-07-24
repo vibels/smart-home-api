@@ -3,15 +3,9 @@ from dash import html, dcc, Input, Output, State, callback
 import json
 import copy
 from src.config.logger import get_logger
-from src.models.sensor import TemperatureModel, HumidityModel, MotionModel, GasModel
+from . import sensor_models
 
 logger = get_logger(__name__)
-
-temp_model = TemperatureModel()
-humidity_model = HumidityModel()
-motion_model = MotionModel()
-gas_model = GasModel()
-sensor_models = [temp_model, humidity_model, motion_model, gas_model]
 
 @callback(
     [Output('edit-condition-modal', 'style'),

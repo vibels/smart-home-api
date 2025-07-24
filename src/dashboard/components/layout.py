@@ -54,7 +54,7 @@ def create_layout():
         
         dcc.Interval(
             id='interval-component',
-            interval=30*1000,
+            interval=5*1000,
             n_intervals=0
         )
     ], className="dashboard")

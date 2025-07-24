@@ -5,18 +5,13 @@ import os
 import json
 from datetime import datetime
 from src.config.logger import get_logger
-from src.models.sensor import TemperatureModel, HumidityModel, MotionModel, GasModel
+from . import sensor_models
 from ..utils.condition_tree import render_condition_tree, validate_condition_tree_completeness
 
 logger = get_logger(__name__)
 
 RULE_ENGINE_URL = os.getenv('RULE_ENGINE_URL', 'http://localhost:5001')
 
-temp_model = TemperatureModel()
-humidity_model = HumidityModel()
-motion_model = MotionModel()
-gas_model = GasModel()
-sensor_models = [temp_model, humidity_model, motion_model, gas_model]
 
 @callback(
     [Output('view-rules-modal', 'style'),
