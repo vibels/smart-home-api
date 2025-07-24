@@ -1,10 +1,9 @@
-.PHONY: help install run build-linux build-windows build-rule-engine-linux setup-buildx test-setup test-run test-teardown test docker-test stop-all stop-influxdb stop-dashboard push-dockerhub tunnel
+.PHONY: help install run build-linux build-windows setup-buildx test-setup test-run test-teardown test docker-test stop-all stop-influxdb stop-dashboard push-dockerhub tunnel
 
 PYTHON := python
 PIP := pip
 DOCKER := docker
 IMAGE_NAME := smart-home-dashboard
-RULE_ENGINE_IMAGE_NAME := smart-home-rule-engine
 BUILDER_NAME := multiplatform-builder
 IMAGE_TAG ?= latest
 DASHBOARD_PORT ?= 8050
@@ -15,7 +14,6 @@ help:
 	@echo "  run                - Run the full stack with docker-compose"
 	@echo "  build-linux        - Build dashboard for Linux (AMD64 + ARM64)"
 	@echo "  build-windows      - Build dashboard for Windows (AMD64)"
-	@echo "  build-rule-engine-linux - Build rule engine for Linux (AMD64 + ARM64)"
 	@echo "  test               - Run integration tests locally"
 	@echo "  docker-test        - Run tests in Docker"
 	@echo "  stop-all           - Stop all running containers"
@@ -30,7 +28,7 @@ install:
 run:
 	docker compose up --pull always
 
-build-linux: setup-buildx build-rule-engine-linux
+build-linux: setup-buildx
 	$(DOCKER) buildx build \
 		--platform linux/amd64,linux/arm64 \
 		--tag $(IMAGE_NAME):linux \
@@ -44,14 +42,6 @@ build-windows: setup-buildx
 		--tag $(IMAGE_NAME):windows \
 		--load \
 		-f Dockerfile.dashboard \
-		.
-
-build-rule-engine-linux: setup-buildx
-	$(DOCKER) buildx build \
-		--platform linux/amd64,linux/arm64 \
-		--tag $(RULE_ENGINE_IMAGE_NAME):linux \
-		--load \
-		-f Dockerfile.rule-engine \
 		.
 
 setup-buildx:
