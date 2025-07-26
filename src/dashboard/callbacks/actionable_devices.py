@@ -82,7 +82,9 @@ def update_actionable_devices(n):
             capabilities_info = []
             for cap in device.capabilities:
                 if cap.capability_type == 'toggle':
-                    current_label = cap.config.get('labels', ['Off', 'On'])[1 if cap.current_value else 0]
+                    current_value_str = str(cap.current_value).lower()
+                    is_on = current_value_str in ['true', '1', 'on', 'yes']
+                    current_label = cap.config.get('labels', ['Off', 'On'])[1 if is_on else 0]
                     capabilities_info.append(html.Div([
                         html.Span(f"{cap.name.replace('_', ' ').title()}: ", className="label"),
                         html.Span(current_label, className="value")
@@ -91,7 +93,7 @@ def update_actionable_devices(n):
                     unit = cap.config.get('unit', '')
                     capabilities_info.append(html.Div([
                         html.Span(f"{cap.name.replace('_', ' ').title()}: ", className="label"),
-                        html.Span(f"{cap.current_value}{unit}", className="value")
+                        html.Span(f"{str(cap.current_value)}{unit}", className="value")
                     ]))
                 elif cap.capability_type == 'discrete_values':
                     capabilities_info.append(html.Div([
