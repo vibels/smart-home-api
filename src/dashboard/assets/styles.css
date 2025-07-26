@@ -68,10 +68,17 @@
 
 .actionable-device-card {
     cursor: default;
+    pointer-events: none;
+}
+
+.actionable-device-card .device-buttons {
+    pointer-events: auto;
 }
 
 .actionable-device-card:hover {
     /* No hover effect for actionable cards to avoid appearing clickable */
+    transform: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .device-title {
